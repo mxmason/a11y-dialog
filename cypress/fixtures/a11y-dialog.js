@@ -35,7 +35,6 @@
           this.create();
       }
       create = () => {
-          console.log('create', this.$el);
           this.$el.setAttribute('aria-hidden', 'true');
           this.$el.setAttribute('aria-modal', 'true');
           this.$el.setAttribute('tabindex', '-1');
