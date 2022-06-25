@@ -74,27 +74,10 @@
           this.listeners = {};
           return this;
       };
-      hide = (event) => {
-          // If the dialog is already closed, abort
-          if (!this.shown) {
-              return this;
-          }
-          this.shown = false;
-          this.$el.setAttribute('aria-hidden', 'true');
-          // If there was a focused element before the dialog was opened (and it has a
-          // `focus` method), restore the focus back to it
-          // See: https://github.com/KittyGiraudel/a11y-dialog/issues/108
-          if (this.previouslyFocused && this.previouslyFocused.focus) {
-              this.previouslyFocused.focus();
-          }
-          // Remove the focus event listener to the body element and stop listening
-          // for specific key presses
-          document.body.removeEventListener('focus', this.maintainFocus, true);
-          document.removeEventListener('keydown', this.bindKeypress);
-          // Execute all callbacks registered for the `hide` event
-          this.fire('hide', event);
-          return this;
-      };
+      /**
+       * Show the dialog element, trap the current focus within it, listen for some
+       * specific key presses and fire all registered callbacks for `show` event
+       */
       show = (event) => {
           // If the dialog is already open, abort
           if (this.shown) {
@@ -116,6 +99,35 @@
           this.fire('show', event);
           return this;
       };
+      /**
+       * Hide the dialog element, restore the focus to the previously
+       * active element, stop listening for some specific key presses
+       * and fire all registered callbacks for `hide` event.
+       */
+      hide = (event) => {
+          // If the dialog is already closed, abort
+          if (!this.shown) {
+              return this;
+          }
+          this.shown = false;
+          this.$el.setAttribute('aria-hidden', 'true');
+          // If there was a focused element before the dialog was opened (and it has a
+          // `focus` method), restore the focus back to it
+          // See: https://github.com/KittyGiraudel/a11y-dialog/issues/108
+          if (this.previouslyFocused && this.previouslyFocused.focus) {
+              this.previouslyFocused.focus();
+          }
+          // Remove the focus event listener to the body element and stop listening
+          // for specific key presses
+          document.body.removeEventListener('focus', this.maintainFocus, true);
+          document.removeEventListener('keydown', this.bindKeypress);
+          // Execute all callbacks registered for the `hide` event
+          this.fire('hide', event);
+          return this;
+      };
+      /**
+       * Register a new callback for the given event type
+       */
       on = (type, handler) => {
           if (typeof this.listeners[type] === 'undefined') {
               this.listeners[type] = [];
@@ -123,6 +135,9 @@
           this.listeners[type].push(handler);
           return this;
       };
+      /**
+       * Unregister an existing callback for the given event type
+       */
       off = (type, handler) => {
           const index = (this.listeners[type] || []).indexOf(handler);
           if (index > -1) {
@@ -130,6 +145,12 @@
           }
           return this;
       };
+      /**
+       * Iterate over all registered handlers for given type and call them all with
+       * the dialog element as first argument, event as second argument (if any).
+       * Also dispatch a custom event on the DOM element itself to make it
+       * possible to react to the lifecycle of auto-instantiated dialogs.
+       */
       fire = (type, event) => {
           const listeners = this.listeners[type] || [];
           const domEvent = new CustomEvent(type, { detail: event });
@@ -138,6 +159,10 @@
               listener(this.$el, event);
           });
       };
+      /**
+       * Private event handler used when listening to some specific key presses
+       * (namely ESC and TAB)
+       */
       bindKeypress = (event) => {
           // This is an escape hatch in case there are nested dialogs, so the keypresses
           // are only reacted to for the most recent one
@@ -187,7 +212,7 @@
       focused.focus();
   }
   /**
-   * Get the focusable children of the given element
+   * Get the focusable children of the given element.
    */
   function getFocusableChildren(node) {
       return $$(focusableSelectors.join(','), node).filter(function (child) {
@@ -196,6 +221,9 @@
               child.getClientRects().length);
       });
   }
+  /**
+   * Trap the focus inside the given element.
+   */
   function trapTabKey(node, event) {
       const focusableChildren = getFocusableChildren(node);
       const focusedItemIndex = focusableChildren.indexOf(document.activeElement);

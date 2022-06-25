@@ -76,6 +76,42 @@ export default class A11yDialog {
     return this
   }
 
+  /**
+   * Show the dialog element, trap the current focus within it, listen for some
+   * specific key presses and fire all registered callbacks for `show` event
+   */
+  public show = (event?: Event): A11yDialog => {
+    // If the dialog is already open, abort
+    if (this.shown) {
+      return this
+    }
+
+    // Keep a reference to the currently focused element to be able to restore
+    // it later
+    this.previouslyFocused = document.activeElement as HTMLElement
+    this.$el.removeAttribute('aria-hidden')
+    this.shown = true
+
+    // Set the focus to the dialog element
+    moveFocusToDialog(this.$el)
+
+    // Bind a focus event listener to the body element to make sure the focus
+    // stays trapped inside the dialog while open, and start listening for some
+    // specific key presses (TAB and ESC)
+    document.body.addEventListener('focus', this.maintainFocus, true)
+    document.addEventListener('keydown', this.bindKeypress)
+
+    // Execute all callbacks registered for the `show` event
+    this.fire('show', event)
+
+    return this
+  }
+
+  /**
+   * Hide the dialog element, restore the focus to the previously
+   * active element, stop listening for some specific key presses
+   * and fire all registered callbacks for `hide` event.
+   */
   public hide = (event?: Event): A11yDialog => {
     // If the dialog is already closed, abort
     if (!this.shown) {
@@ -103,33 +139,9 @@ export default class A11yDialog {
     return this
   }
 
-  public show = (event: Event): A11yDialog => {
-    // If the dialog is already open, abort
-    if (this.shown) {
-      return this
-    }
-
-    // Keep a reference to the currently focused element to be able to restore
-    // it later
-    this.previouslyFocused = document.activeElement as HTMLElement
-    this.$el.removeAttribute('aria-hidden')
-    this.shown = true
-
-    // Set the focus to the dialog element
-    moveFocusToDialog(this.$el)
-
-    // Bind a focus event listener to the body element to make sure the focus
-    // stays trapped inside the dialog while open, and start listening for some
-    // specific key presses (TAB and ESC)
-    document.body.addEventListener('focus', this.maintainFocus, true)
-    document.addEventListener('keydown', this.bindKeypress)
-
-    // Execute all callbacks registered for the `show` event
-    this.fire('show', event)
-
-    return this
-  }
-
+  /**
+   * Register a new callback for the given event type
+   */
   public on = (type: A11yDialogEvent, handler: EventHandler): A11yDialog => {
     if (typeof this.listeners[type] === 'undefined') {
       this.listeners[type] = []
@@ -140,6 +152,9 @@ export default class A11yDialog {
     return this
   }
 
+	/**
+	 * Unregister an existing callback for the given event type
+	 */
   public off = (type: A11yDialogEvent, handler: EventHandler): A11yDialog => {
     const index = (this.listeners[type] || []).indexOf(handler)
 
@@ -150,6 +165,12 @@ export default class A11yDialog {
     return this
   }
 
+  /**
+   * Iterate over all registered handlers for given type and call them all with
+   * the dialog element as first argument, event as second argument (if any).
+   * Also dispatch a custom event on the DOM element itself to make it
+   * possible to react to the lifecycle of auto-instantiated dialogs.
+   */
   private fire = (type: A11yDialogEvent, event?: Event) => {
     const listeners = this.listeners[type] || []
     const domEvent = new CustomEvent(type, { detail: event })
@@ -161,6 +182,10 @@ export default class A11yDialog {
     })
   }
 
+  /**
+   * Private event handler used when listening to some specific key presses
+   * (namely ESC and TAB)
+   */
   private bindKeypress = (event: KeyboardEvent) => {
     // This is an escape hatch in case there are nested dialogs, so the keypresses
     // are only reacted to for the most recent one
@@ -220,7 +245,7 @@ function moveFocusToDialog(node: HTMLElement) {
 }
 
 /**
- * Get the focusable children of the given element
+ * Get the focusable children of the given element.
  */
 function getFocusableChildren(node: HTMLElement) {
   return $$(focusableSelectors.join(','), node).filter(function (child) {
@@ -232,6 +257,9 @@ function getFocusableChildren(node: HTMLElement) {
   })
 }
 
+/**
+ * Trap the focus inside the given element.
+ */
 function trapTabKey(node: HTMLElement, event: KeyboardEvent) {
   const focusableChildren = getFocusableChildren(node)
   const focusedItemIndex = focusableChildren.indexOf(
