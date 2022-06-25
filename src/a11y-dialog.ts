@@ -23,7 +23,6 @@ export default class A11yDialog {
   }
 
   public create = (): A11yDialog => {
-    console.log('create', this.$el)
     this.$el.setAttribute('aria-hidden', 'true')
     this.$el.setAttribute('aria-modal', 'true')
     this.$el.setAttribute('tabindex', '-1')
@@ -131,18 +130,7 @@ export default class A11yDialog {
     return this
   }
 
-  private fire = (type: A11yDialogEvent, event?: Event) => {
-    const listeners = this.listeners[type] || []
-    const domEvent = new CustomEvent(type, { detail: event })
-
-    this.$el.dispatchEvent(domEvent)
-
-    listeners.forEach((listener: EventHandler) => {
-      listener(this.$el, event)
-    })
-  }
-
-  public on(type: A11yDialogEvent, handler: EventHandler) {
+  public on = (type: A11yDialogEvent, handler: EventHandler): A11yDialog => {
     if (typeof this.listeners[type] === 'undefined') {
       this.listeners[type] = []
     }
@@ -152,7 +140,7 @@ export default class A11yDialog {
     return this
   }
 
-  public off = (type: A11yDialogEvent, handler: EventHandler) => {
+  public off = (type: A11yDialogEvent, handler: EventHandler): A11yDialog => {
     const index = (this.listeners[type] || []).indexOf(handler)
 
     if (index > -1) {
@@ -160,6 +148,17 @@ export default class A11yDialog {
     }
 
     return this
+  }
+
+  private fire = (type: A11yDialogEvent, event?: Event) => {
+    const listeners = this.listeners[type] || []
+    const domEvent = new CustomEvent(type, { detail: event })
+
+    this.$el.dispatchEvent(domEvent)
+
+    listeners.forEach((listener: EventHandler) => {
+      listener(this.$el, event)
+    })
   }
 
   private bindKeypress = (event: KeyboardEvent) => {
