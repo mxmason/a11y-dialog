@@ -22,6 +22,9 @@ export default class A11yDialog {
     this.create()
   }
 
+  /**
+   * Set up everything necessary for the dialog to be functioning
+   */
   public create = (): A11yDialog => {
     this.$el.setAttribute('aria-hidden', 'true')
     this.$el.setAttribute('aria-modal', 'true')
@@ -53,6 +56,10 @@ export default class A11yDialog {
     return this
   }
 
+  /**
+   * Destroy the current instance (after making sure the dialog has been hidden)
+   * and remove all associated listeners from dialog openers and closers
+   */
   public destroy = (): A11yDialog => {
     // Hide the dialog to avoid destroying an open instance
     this.hide()
@@ -152,9 +159,9 @@ export default class A11yDialog {
     return this
   }
 
-	/**
-	 * Unregister an existing callback for the given event type
-	 */
+  /**
+   * Unregister an existing callback for the given event type
+   */
   public off = (type: A11yDialogEvent, handler: EventHandler): A11yDialog => {
     const index = (this.listeners[type] || []).indexOf(handler)
 
