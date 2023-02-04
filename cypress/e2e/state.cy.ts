@@ -1,4 +1,4 @@
-import { shouldBeHidden, shouldBeVisible } from './utils.js'
+import { shouldBeHidden, shouldBeVisible } from './utils'
 
 describe('State', { testIsolation: false }, () => {
   before(() => cy.visit('/base'))

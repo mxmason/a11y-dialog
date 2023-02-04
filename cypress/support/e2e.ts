@@ -5,7 +5,7 @@ import { getFocusableEdges } from '../fixtures/dom-utils'
 Cypress.Commands.add(
   'aliasFocusableEdges',
   { prevSubject: true },
-  (subject, { skipAliases = false } = {}) => {
+  (subject: JQuery<HTMLElement>, { skipAliases = false } = {}) => {
     cy.wrap(subject, { log: false })
       .then(subject => getFocusableEdges(subject.get(0)))
       .as('edges')
@@ -22,42 +22,68 @@ Cypress.Commands.add(
 
 chai.use(_chai => {
   _chai.Assertion.addMethod('element', function isElement(localName) {
+    const el = this._obj
     if (localName) {
+      const actual = el.localName
+      const expected = localName
       this.assert(
-        this._obj.localName === localName,
+        el.localName === localName,
         `expected #{this} to be an element with localName "${localName}"`,
-        `expected #{this} not to be an element with localName "${localName}"`
+        `expected #{this} not to be an element with localName "${localName}"`,
+        expected,
+        actual
       )
     }
+    const expected = true
+    const actual = Cypress.dom.isElement(el)
     this.assert(
-      Cypress.dom.isElement(this._obj),
+      actual,
       `expected #{this} to be an element`,
-      `expected #{this} not to be an element`
+      `expected #{this} not to be an element`,
+      expected,
+      actual
     )
   })
 
   _chai.Assertion.addMethod('focusable', function isFocusable() {
+    const el = this._obj
+    const expected = true
+    const actual = Cypress.dom.isFocusable(el)
+
     this.assert(
-      Cypress.dom.isFocusable(this._obj),
+      actual,
       `expected #{this} to be focusable`,
-      `expected #{this} not to be focusable`
+      `expected #{this} not to be focusable`,
+      expected,
+      actual
     )
   })
 
-  _chai.Assertion.addMethod('withinShadowRoot', function isFocusable() {
+  _chai.Assertion.addMethod('withinShadowRoot', function isWithinShadowRoot() {
+    const expected = true
+    // @ts-ignore: this method exists; it's just not in the type definition
+    const actual = Cypress.dom.isWithinShadowRoot(this._obj)
     this.assert(
-      Cypress.dom.isWithinShadowRoot(this._obj),
+      actual,
       `expected #{this} to be in shadow DOM`,
-      `expected #{this} not to be in shadow DOM`
+      `expected #{this} not to be in shadow DOM`,
+      expected,
+      actual
     )
   })
 
   // See: https://github.com/cypress-io/cypress/blob/develop/packages/driver/src/dom/elements/shadow.ts#L4
-  _chai.Assertion.addMethod('shadowRoot', function isFocusable() {
+  _chai.Assertion.addMethod('shadowRoot', function isShadowRoot() {
+    const el = this._obj
+    const actual = el.shadowRoot?.toString()
+    const expected = '[object ShadowRoot]'
+
     this.assert(
-      this._obj.shadowRoot?.toString() === '[object ShadowRoot]',
+      actual === expected,
       `expected #{this} to have a shadow root`,
-      `expected #{this} not to have a shadow root`
+      `expected #{this} not to have a shadow root`,
+      expected,
+      actual
     )
   })
 })
